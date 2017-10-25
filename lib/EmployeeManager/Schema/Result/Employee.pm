@@ -166,6 +166,36 @@ __PACKAGE__->has_many(
 # Created by DBIx::Class::Schema::Loader v0.07047 @ 2017-10-25 16:36:45
 # DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:tqc4JpUWuKb3ndV0dp33fw
 
+    # many_to_many():
+    #   args:
+    #     1) Name of relationship bridge, DBIC will create accessor with this name
+    #     2) Name of has_many() relationship this many_to_many() is shortcut for
+    #     3) Name of belongs_to() relationship in model class of has_many() above
+    #   You must already have the has_many() defined to use a many_to_many().
+    
+__PACKAGE__->many_to_many( # Departments employee is part of or has been a part of 
+    departments => 'dept_emps',
+    'dept_no'
+);
+__PACKAGE__->many_to_many( # Departments employee manages or has managed
+    departments_managed => 'dept_managers',
+    'dept_no'
+);
+
+__PACKAGE__->has_many(
+    'curr_dept_managers',
+    "EmployeeManager::Schema::Result::DeptManager",
+
+    sub {
+        my $args = shift;
+        {   "$args->{foreign_alias}.emp_no" => "$args->{self_alias}.emp_no",
+            "$args->{foreign_alias}.date"   => \'CURRENT_TIMESTAMP'
+        };
+    },
+
+        #    { "foreign.emp_no" => "self.emp_no", 'foreign.date' => { '>=', \'CURRENT_TIMESTAMP' } },
+        { cascade_copy => 0, cascade_delete => 0 },
+);
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration
 __PACKAGE__->meta->make_immutable;
